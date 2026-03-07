@@ -2,6 +2,7 @@
     "name": "wadock",
     "version": "0.1.0",
     "private": true,
+    "type": "module",
     "description": "Self-hosted WhatsApp gateway — middleware between WhatsApp and automation engines",
     "workspaces": [
         "packages/server",

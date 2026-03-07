@@ -24,6 +24,7 @@ WORKDIR /app
 
 # Copy built server
 COPY --from=server-build /app/packages/server/dist ./dist
+COPY --from=server-build /app/packages/server/src/db/migrations ./dist/db/migrations
 COPY --from=server-build /app/packages/server/package.json ./packages/server/
 
 # Copy built dashboard into server's dist
