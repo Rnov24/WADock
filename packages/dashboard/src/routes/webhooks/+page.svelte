@@ -102,7 +102,7 @@
       <input id="wh-url" type="url" placeholder="https://n8n.example.com/webhook/..." bind:value={formUrl} />
     </div>
     <div class="form-group">
-      <label>Events</label>
+      <span class="group-label">Events</span>
       <div class="event-grid">
         {#each eventTypes as evt}
           <label class="event-item">
@@ -192,7 +192,8 @@
     margin: 1rem 0;
   }
 
-  .form-group label {
+  .form-group label,
+  .form-group .group-label {
     display: block;
     font-size: 0.8rem;
     font-weight: 600;

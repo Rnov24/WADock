@@ -60,7 +60,6 @@
           placeholder="Admin password"
           bind:value={loginPassword}
           class="login-input"
-          autofocus
         />
         {#if loginError}
           <p class="login-error">{loginError}</p>

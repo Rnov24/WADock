@@ -107,7 +107,7 @@
       <input id="key-name" type="text" placeholder="e.g. n8n-prod" bind:value={newKeyName} />
     </div>
     <div class="form-group">
-      <label>Permissions</label>
+      <span class="group-label">Permissions</span>
       <div class="perm-grid">
         {#each allPermissions as perm}
           <label class="perm-item">
@@ -204,7 +204,8 @@
     margin: 1rem 0;
   }
 
-  .form-group label {
+  .form-group label,
+  .form-group .group-label {
     display: block;
     font-size: 0.8rem;
     font-weight: 600;

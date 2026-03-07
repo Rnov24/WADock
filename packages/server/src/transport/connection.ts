@@ -58,9 +58,16 @@ export function createTransport(dataDir: string, logLevel: string): WADockTransp
 
         emitter.socket = socket;
 
+        emitter.connectionState = { connection: 'connecting' } as ConnectionState;
+
         // --- Connection updates ---
         socket.ev.on('connection.update', (update) => {
             const { connection, lastDisconnect, qr } = update;
+
+            // If Baileys provides a connection status (open, close, connecting), update our state
+            if (connection) {
+                emitter.connectionState = { connection } as ConnectionState;
+            }
 
             if (qr) {
                 emitter.qrCode = qr;
@@ -71,25 +78,27 @@ export function createTransport(dataDir: string, logLevel: string): WADockTransp
                 retryCount = 0;
                 emitter.qrCode = null;
                 emitter.selfJid = socket.user?.id ?? null;
-                emitter.connectionState = { connection: 'open' } as ConnectionState;
                 emitter.emit('connection', { status: 'open' });
             }
 
             if (connection === 'close') {
-                emitter.connectionState = { connection: 'close' } as ConnectionState;
                 const reason = (lastDisconnect?.error as Boom)?.output?.statusCode;
 
                 if (reason === DisconnectReason.loggedOut) {
                     emitter.emit('connection', { status: 'close', reason: 'logged_out' });
+                    // Delete session files
+                    import('node:fs').then(fs => fs.rmSync(sessionDir, { recursive: true, force: true }));
                     return;
                 }
 
                 // Auto-reconnect with backoff
-                if (retryCount < maxRetries) {
+                if (reason !== DisconnectReason.loggedOut && retryCount < maxRetries) {
                     retryCount++;
                     const delay = Math.min(1000 * Math.pow(2, retryCount), 60_000);
-                    emitter.emit('connection', { status: 'close', reason: 'reconnecting' });
-                    setTimeout(() => emitter.start(), delay);
+                    emitter.emit('connection', { status: 'close', reason: 'reconnecting', delay });
+                    setTimeout(() => {
+                        emitter.stop().then(() => emitter.start());
+                    }, delay);
                 } else {
                     emitter.emit('connection', { status: 'close', reason: 'max_retries' });
                 }

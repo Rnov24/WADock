@@ -8,15 +8,16 @@
   let qrCanvas = $state(null);
   let pollInterval = $state(null);
 
+  let connecting = $state(false);
+
   async function fetchStatus() {
     try {
       const data = await session.status();
       status = data.connection;
       account = data.account;
-
+      
       if (data.qr && data.qr !== qrData) {
         qrData = data.qr;
-        renderQr(data.qr);
       } else if (!data.qr) {
         qrData = null;
       }
@@ -25,25 +26,33 @@
     }
   }
 
-  async function renderQr(data) {
-    if (!qrCanvas) return;
-    const QRCode = await import('qrcode');
-    await QRCode.toCanvas(qrCanvas, data, {
-      width: 280,
-      margin: 2,
-      color: { dark: '#e4e5e9', light: '#1a1d27' },
-    });
-  }
+  $effect(() => {
+    if (qrCanvas && qrData) {
+      import('qrcode').then(QRCode => {
+        QRCode.toCanvas(qrCanvas, qrData, {
+          width: 280,
+          margin: 2,
+          color: { dark: '#e4e5e9', light: '#1a1d27' },
+        });
+      });
+    }
+  });
 
   async function handleLogout() {
+    connecting = true;
     await session.logout();
     status = 'close';
     account = null;
+    qrData = null;
+    connecting = false;
   }
 
   async function handleRestart() {
+    connecting = true;
     await session.restart();
     status = 'connecting';
+    qrData = null;
+    connecting = false;
   }
 
   onMount(() => {
@@ -98,7 +107,9 @@
     <div class="card">
       <div class="empty-state">
         <p>Disconnected</p>
-        <button class="btn btn-primary" onclick={handleRestart}>Reconnect</button>
+        <button class="btn btn-primary" onclick={handleRestart} disabled={connecting}>
+          {connecting ? 'Reconnecting...' : 'Reconnect'}
+        </button>
       </div>
     </div>
   {/if}
