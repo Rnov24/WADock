@@ -1,0 +1,21 @@
+{
+    "name": "wadock",
+    "version": "0.1.0",
+    "private": true,
+    "description": "Self-hosted WhatsApp gateway — middleware between WhatsApp and automation engines",
+    "workspaces": [
+        "packages/server",
+        "packages/dashboard"
+    ],
+    "scripts": {
+        "dev": "npm run dev --workspace=packages/server",
+        "dev:dashboard": "npm run dev --workspace=packages/dashboard",
+        "build:dashboard": "npm run build --workspace=packages/dashboard",
+        "build:server": "npm run build --workspace=packages/server",
+        "build": "npm run build:dashboard && npm run build:server",
+        "start": "node packages/server/dist/index.js"
+    },
+    "engines": {
+        "node": ">=20.0.0"
+    }
+}

@@ -1,0 +1,15 @@
+services:
+  wadock:
+    build: .
+    container_name: wadock
+    ports:
+      - "3000:3000"
+    volumes:
+      - wadock-data:/data
+    environment:
+      - ADMIN_PASSWORD=${ADMIN_PASSWORD:-changeme}
+      - LOG_LEVEL=${LOG_LEVEL:-info}
+    restart: unless-stopped
+
+volumes:
+  wadock-data:

@@ -1,0 +1,13 @@
+node_modules/
+dist/
+build/
+.env
+*.db
+*.db-journal
+/data/
+.svelte-kit/
+.turbo/
+.agent
+.agents
+docs
+skills-lock.json
