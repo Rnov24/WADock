@@ -25,9 +25,21 @@ export async function sessionRoutes(app: FastifyInstance) {
             const transport = app.wadock.transport;
 
             if (transport.socket) {
-                await transport.socket.logout();
-                await transport.stop();
+                try {
+                    await transport.socket.logout();
+                } catch { /* ignore */ }
             }
+            await transport.stop();
+
+            // Force delete session files
+            const { join } = await import('node:path');
+            const { rmSync } = await import('node:fs');
+            const sessionDir = join(app.wadock.config.dataDir, 'session');
+            try {
+                rmSync(sessionDir, { recursive: true, force: true });
+            } catch { /* ignore */ }
+
+            transport.connectionState = { connection: 'close' } as any;
 
             return { success: true, message: 'Logged out and session cleared' };
         },

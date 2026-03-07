@@ -15,11 +15,27 @@ declare module 'fastify' {
 export function requireAuth(permission: Permission) {
     return async (request: FastifyRequest, reply: FastifyReply) => {
         const authHeader = request.headers.authorization;
+        const sessionToken = request.cookies?.wadock_session;
 
+        // 1. Check if authenticated as Admin via Dashboard cookie
+        if (sessionToken) {
+            const unsigned = request.unsignCookie(sessionToken);
+            if (unsigned.valid && unsigned.value === 'admin') {
+                // Admins have full access to everything
+                request.apiKey = {
+                    id: 'admin',
+                    name: 'Admin Dashboard',
+                    permissions: ['full'],
+                };
+                return; // Access granted
+            }
+        }
+
+        // 2. Fallback to API Key auth
         if (!authHeader || !authHeader.startsWith('Bearer ')) {
             return reply.status(401).send({
                 error: 'Unauthorized',
-                message: 'Missing or invalid Authorization header. Expected: Bearer wdk_...',
+                message: 'Missing or invalid Authorization header or admin session. Expected: Bearer wdk_...',
             });
         }
 
