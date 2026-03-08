@@ -26,7 +26,22 @@ const sendDocumentSchema = z.object({
 export async function messageRoutes(app: FastifyInstance) {
     app.post(
         '/api/messages/send-text',
-        { preHandler: requireAuth('messages:send') },
+        {
+            preHandler: requireAuth('messages:send'),
+            schema: {
+                description: 'Send a standard text message',
+                tags: ['Messages'],
+                security: [{ apiKey: [] }],
+                body: {
+                    type: 'object',
+                    required: ['to', 'text'],
+                    properties: {
+                        to: { type: 'string', description: 'Recipient phone number with country code (e.g. 62812345678)' },
+                        text: { type: 'string', description: 'Message content' },
+                    },
+                }
+            }
+        },
         async (request, reply) => {
             const parsed = sendTextSchema.safeParse(request.body);
             if (!parsed.success) {
@@ -47,7 +62,7 @@ export async function messageRoutes(app: FastifyInstance) {
                     chat_id: to,
                     message_id: messageId ?? null,
                     type: 'text',
-                    summary: text.slice(0, 200),
+                    summary: text.slice(0, 100),
                     status: 'sent',
                     timestamp: Date.now(),
                     metadata: null,
@@ -66,7 +81,23 @@ export async function messageRoutes(app: FastifyInstance) {
 
     app.post(
         '/api/messages/send-image',
-        { preHandler: requireAuth('messages:send') },
+        {
+            preHandler: requireAuth('messages:send'),
+            schema: {
+                description: 'Send an image via URL',
+                tags: ['Messages'],
+                security: [{ apiKey: [] }],
+                body: {
+                    type: 'object',
+                    required: ['to', 'imageUrl'],
+                    properties: {
+                        to: { type: 'string', description: 'Recipient phone number' },
+                        imageUrl: { type: 'string', description: 'Public URL to the image' },
+                        caption: { type: 'string', description: 'Optional text caption' },
+                    },
+                }
+            }
+        },
         async (request, reply) => {
             const parsed = sendImageSchema.safeParse(request.body);
             if (!parsed.success) {
@@ -110,7 +141,24 @@ export async function messageRoutes(app: FastifyInstance) {
 
     app.post(
         '/api/messages/send-document',
-        { preHandler: requireAuth('messages:send') },
+        {
+            preHandler: requireAuth('messages:send'),
+            schema: {
+                description: 'Send a document/file via URL',
+                tags: ['Messages'],
+                security: [{ apiKey: [] }],
+                body: {
+                    type: 'object',
+                    required: ['to', 'documentUrl', 'filename'],
+                    properties: {
+                        to: { type: 'string', description: 'Recipient phone number' },
+                        documentUrl: { type: 'string', description: 'Public URL to the document' },
+                        filename: { type: 'string', description: 'Name of the file to display' },
+                        mimetype: { type: 'string', description: 'MIME type of the file (e.g. application/pdf)' },
+                    },
+                }
+            }
+        },
         async (request, reply) => {
             const parsed = sendDocumentSchema.safeParse(request.body);
             if (!parsed.success) {

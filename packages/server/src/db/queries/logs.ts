@@ -96,3 +96,36 @@ export function listRecentDeliveryLogs(limit: number = 50): DeliveryLogRow[] {
         [limit],
     );
 }
+
+export function getLogStats(sinceDurationMs: number = 24 * 60 * 60 * 1000) {
+    const since = Date.now() - sinceDurationMs;
+
+    const msgStats = queryAll<{ direction: string; count: number }>(
+        'SELECT direction, COUNT(*) as count FROM message_logs WHERE timestamp >= ? GROUP BY direction',
+        [since]
+    );
+
+    const deliveryStats = queryAll<{ success: number; count: number }>(
+        'SELECT success, COUNT(*) as count FROM delivery_logs WHERE timestamp >= ? GROUP BY success',
+        [since]
+    );
+
+    let messagesIn = 0;
+    let messagesOut = 0;
+    for (const row of msgStats) {
+        if (row.direction === 'inbound') messagesIn = row.count;
+        if (row.direction === 'outbound') messagesOut = row.count;
+    }
+
+    let deliveriesSuccess = 0;
+    let deliveriesTotal = 0;
+    for (const row of deliveryStats) {
+        deliveriesTotal += row.count;
+        if (row.success === 1) deliveriesSuccess = row.count;
+    }
+
+    return {
+        messages: { in: messagesIn, out: messagesOut },
+        deliveries: { total: deliveriesTotal, success: deliveriesSuccess }
+    };
+}

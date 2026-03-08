@@ -54,6 +54,11 @@ export function createTransport(dataDir: string, logLevel: string): WADockTransp
             logger,
             printQRInTerminal: false,
             generateHighQualityLinkPreview: false,
+            // Optimization: Ignore WhatsApp Status/Stories
+            shouldIgnoreJid: (jid) => jid === 'status@broadcast',
+            // Optimization: Skip downloading/syncing media automatically
+            syncFullHistory: false,
+            markOnlineOnConnect: false,
         });
 
         emitter.socket = socket;

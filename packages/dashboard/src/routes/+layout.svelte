@@ -15,7 +15,6 @@
     { href: '/', label: 'Session', icon: '📡' },
     { href: '/keys', label: 'API Keys', icon: '🔑' },
     { href: '/webhooks', label: 'Webhooks', icon: '🔗' },
-    { href: '/logs', label: 'Logs', icon: '📋' },
   ];
 
   onMount(async () => {

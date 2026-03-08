@@ -1,5 +1,7 @@
 import type { FastifyInstance } from 'fastify';
 import { requireAuth } from '../auth/middleware.js';
+import * as os from 'node:os';
+import { getLogStats } from '../db/queries/logs.js';
 
 export async function sessionRoutes(app: FastifyInstance) {
     app.get(
@@ -8,12 +10,25 @@ export async function sessionRoutes(app: FastifyInstance) {
         async () => {
             const transport = app.wadock.transport;
 
+            // Calculate CPU Load simple approximation
+            const cpus = os.cpus();
+            const cpuLoad = cpus.length > 0 ? cpus[0].times.user / (cpus[0].times.user + cpus[0].times.idle) * 100 : 0;
+
             return {
                 connection: transport.connectionState?.connection ?? 'close',
                 qr: transport.qrCode,
                 account: transport.selfJid
                     ? transport.selfJid.replace(/@.*$/, '')
                     : null,
+                metrics: {
+                    os: os.type(),
+                    uptime: os.uptime(),
+                    totalMem: os.totalmem(),
+                    freeMem: os.freemem(),
+                    cpuLoad: Math.round(cpuLoad),
+                    cpuCores: cpus.length,
+                },
+                stats: getLogStats()
             };
         },
     );

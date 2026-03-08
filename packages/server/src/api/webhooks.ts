@@ -33,7 +33,14 @@ const updateWebhookSchema = z.object({
 export async function webhookRoutes(app: FastifyInstance) {
     app.get(
         '/api/webhooks',
-        { preHandler: requireAuth('webhooks:read') },
+        {
+            preHandler: requireAuth('webhooks:read'),
+            schema: {
+                description: 'List all registered configured webhooks',
+                tags: ['Webhooks'],
+                security: [{ apiKey: [] }]
+            }
+        },
         async () => {
             const rows = listWebhooks();
             return rows.map((wh) => ({
@@ -50,7 +57,23 @@ export async function webhookRoutes(app: FastifyInstance) {
 
     app.post(
         '/api/webhooks',
-        { preHandler: requireAuth('webhooks:write') },
+        {
+            preHandler: requireAuth('webhooks:write'),
+            schema: {
+                description: 'Create a new webhook destination',
+                tags: ['Webhooks'],
+                security: [{ apiKey: [] }],
+                body: {
+                    type: 'object',
+                    required: ['url', 'events'],
+                    properties: {
+                        url: { type: 'string', description: 'HTTPS Endpoint URL' },
+                        events: { type: 'array', items: { type: 'string' }, description: 'List of events to subscribe to, e.g. ["message.incoming"]' },
+                        secret: { type: 'string', description: 'Optional secret for HMAC signatures' }
+                    }
+                }
+            }
+        },
         async (request, reply) => {
             const parsed = createWebhookSchema.safeParse(request.body);
             if (!parsed.success) {
@@ -79,7 +102,26 @@ export async function webhookRoutes(app: FastifyInstance) {
 
     app.patch(
         '/api/webhooks/:id',
-        { preHandler: requireAuth('webhooks:write') },
+        {
+            preHandler: requireAuth('webhooks:write'),
+            schema: {
+                description: 'Update an existing webhook',
+                tags: ['Webhooks'],
+                security: [{ apiKey: [] }],
+                params: {
+                    type: 'object',
+                    properties: { id: { type: 'string' } }
+                },
+                body: {
+                    type: 'object',
+                    properties: {
+                        url: { type: 'string' },
+                        events: { type: 'array', items: { type: 'string' } },
+                        active: { type: 'boolean' }
+                    }
+                }
+            }
+        },
         async (request, reply) => {
             const { id } = request.params as { id: string };
             const parsed = updateWebhookSchema.safeParse(request.body);
@@ -106,7 +148,18 @@ export async function webhookRoutes(app: FastifyInstance) {
 
     app.delete(
         '/api/webhooks/:id',
-        { preHandler: requireAuth('webhooks:write') },
+        {
+            preHandler: requireAuth('webhooks:write'),
+            schema: {
+                description: 'Delete a webhook',
+                tags: ['Webhooks'],
+                security: [{ apiKey: [] }],
+                params: {
+                    type: 'object',
+                    properties: { id: { type: 'string' } }
+                }
+            }
+        },
         async (request, reply) => {
             const { id } = request.params as { id: string };
             const deleted = deleteWebhook(id);

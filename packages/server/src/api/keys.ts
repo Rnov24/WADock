@@ -12,7 +12,14 @@ const createKeySchema = z.object({
 export async function keyRoutes(app: FastifyInstance) {
     app.get(
         '/api/keys',
-        { preHandler: requireAuth('keys:read') },
+        {
+            preHandler: requireAuth('keys:read'),
+            schema: {
+                description: 'List all active API keys',
+                tags: ['API Keys'],
+                security: [{ apiKey: [] }]
+            }
+        },
         async () => {
             return getAllKeys();
         },
@@ -20,7 +27,26 @@ export async function keyRoutes(app: FastifyInstance) {
 
     app.post(
         '/api/keys',
-        { preHandler: requireAuth('keys:write') },
+        {
+            preHandler: requireAuth('keys:write'),
+            schema: {
+                description: 'Generate a new API key',
+                tags: ['API Keys'],
+                security: [{ apiKey: [] }],
+                body: {
+                    type: 'object',
+                    required: ['name', 'permissions'],
+                    properties: {
+                        name: { type: 'string', description: 'Friendly name for the key' },
+                        permissions: {
+                            type: 'array',
+                            items: { type: 'string' },
+                            description: 'List of permissions (e.g. ["messages:send"]) or ["full"]'
+                        }
+                    }
+                }
+            }
+        },
         async (request, reply) => {
             const parsed = createKeySchema.safeParse(request.body);
             if (!parsed.success) {
@@ -53,7 +79,18 @@ export async function keyRoutes(app: FastifyInstance) {
 
     app.delete(
         '/api/keys/:id',
-        { preHandler: requireAuth('keys:write') },
+        {
+            preHandler: requireAuth('keys:write'),
+            schema: {
+                description: 'Revoke and delete an API key',
+                tags: ['API Keys'],
+                security: [{ apiKey: [] }],
+                params: {
+                    type: 'object',
+                    properties: { id: { type: 'string' } }
+                }
+            }
+        },
         async (request, reply) => {
             const { id } = request.params as { id: string };
             const deleted = revokeApiKey(id);

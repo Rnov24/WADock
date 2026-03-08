@@ -43,6 +43,36 @@ async function main() {
     });
 
     // --- Plugins ---
+    const fastifySwagger = await import('@fastify/swagger');
+    const fastifySwaggerUi = await import('@fastify/swagger-ui');
+
+    await app.register(fastifySwagger.default, {
+        openapi: {
+            info: {
+                title: 'WADock API',
+                description: 'Self-hosted WhatsApp API Gateway',
+                version: '0.1.0',
+            },
+            components: {
+                securitySchemes: {
+                    apiKey: {
+                        type: 'http',
+                        scheme: 'bearer',
+                        bearerFormat: 'API Key',
+                    },
+                },
+            },
+            security: [{ apiKey: [] }],
+        },
+    });
+
+    await app.register(fastifySwaggerUi.default, {
+        routePrefix: '/docs',
+        uiConfig: {
+            docExpansion: 'list',
+            deepLinking: false,
+        },
+    });
     await app.register(fastifyCors, {
         origin: true,
         credentials: true,
@@ -79,7 +109,7 @@ async function main() {
                 chat_id: payload.chatId,
                 message_id: payload.messageId,
                 type: payload.type,
-                summary: payload.body?.slice(0, 200) ?? `[${payload.type}]`,
+                summary: payload.body?.slice(0, 100) ?? `[${payload.type}]`,
                 status: 'received',
                 timestamp: Date.now(),
                 metadata: null,
